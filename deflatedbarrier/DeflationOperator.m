@@ -34,7 +34,7 @@ classdef DeflationOperator < handle
             else
                 dMy = self.getdMy(state, update);
                 minv = 1.0 / self.deflation.evaluate(state);
-                stepadjustment = (1 + minv*dMy/(1 - minv*dMy));
+                stepadjustment = 1/(1 - minv*dMy);
             end
         end
         
