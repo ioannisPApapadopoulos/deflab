@@ -6,6 +6,7 @@ classdef NonlinearSolver < handle
         max_iter = 100;
         deflation = []
         damping = 1;
+        tol = 1e-9;
     end
     
     methods
@@ -43,6 +44,7 @@ classdef NonlinearSolver < handle
             defaultDamping = 1;
             defaultMaxIter = 100;
             defaultDeflation = [];
+            defaultTol = 1e-9;
             
             
             expectedLinesearch = {'basic'};
@@ -56,7 +58,8 @@ classdef NonlinearSolver < handle
                 @(x) any(validatestring(x,expectedLinesearch)));
             addParameter(p, 'damping', defaultDamping, validpos);
             addParameter(p, 'max_iter', defaultMaxIter, validpos);
-            
+            addParameter(p, 'tol', defaultTol, validpos);
+
             parse(p,varargin{:});
             
 
@@ -71,6 +74,7 @@ classdef NonlinearSolver < handle
             nls.deflation = p.Results.deflation;
             nls.damping = p.Results.damping;
             nls.max_iter = floor(p.Results.max_iter);
+            nls.tol = p.Results.tol;
         end
         
         function root = newton(nls, state, residual, jacobian)
@@ -81,7 +85,7 @@ classdef NonlinearSolver < handle
             evaluatedJacobian = jacobian(x);
             normEvaluatedResidual = norm(evaluatedResidual,2);
             fprintf('Iteration %i, residual norm = %e\n', iter, normEvaluatedResidual);
-            while normEvaluatedResidual > 1e-9  && iter < nls.max_iter
+            while normEvaluatedResidual > nls.tol  && iter < nls.max_iter
                 update = nls.LinearSolver.solve(evaluatedJacobian, evaluatedResidual);
                
                 

@@ -26,13 +26,15 @@ classdef DeflationOperator < handle
             if isequal(p.Results.DeflationOperator, 'ShiftedDeflation')
                 self.deflation = ShiftedDeflation(2,1,foundRoots,self.innerProductMatrix,[]);
             elseif isequal(p.Results.DeflationOperator, 'ExponentialDeflation')
-                self.deflation = ExponentialDeflation(foundRoots,self.innerProductMatrix,[]);
+                self.deflation = ExponentialDeflation(1,0,foundRoots,self.innerProductMatrix,[]);
+            else
+                error('DeflationOperator should be of type ShiftedDeflation or ExponentialDeflation')
             end
 
         end
 
         function updateFoundSolutions(self, newroot)
-            if isrow(newroot)
+            if isrow(newroot) && length(newroot) > 1
                 warning('Discovered roots should be given as a column vector')
                 newroot = newroot';
             end
