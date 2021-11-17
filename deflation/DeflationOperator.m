@@ -1,14 +1,20 @@
 classdef DeflationOperator < handle
-    
+
     properties
         foundRoots
         deflation
         innerProductMatrix
     end
-    
+
     methods
-        
-        function self = DeflationOperator(foundRoots, innerProductMatrix)
+
+        function self = DeflationOperator(foundRoots, innerProductMatrix, varargin)
+
+            defaultDeflationOperator = 'ShiftedDeflation';
+            p = inputParser;
+            addParameter(p, 'DeflationOperator', defaultDeflationOperator);
+            parse(p,varargin{:});
+
             for iter = 1:length(foundRoots)
                 if isrow(foundRoots{iter})
                     foundRoots{iter} = foundRoots{iter}';
@@ -16,9 +22,15 @@ classdef DeflationOperator < handle
             end
             self.foundRoots = foundRoots;
             self.innerProductMatrix = innerProductMatrix;
-            self.deflation = ShiftedDeflation(2,1,foundRoots,self.innerProductMatrix,[]);
+            
+            if isequal(p.Results.DeflationOperator, 'ShiftedDeflation')
+                self.deflation = ShiftedDeflation(2,1,foundRoots,self.innerProductMatrix,[]);
+            elseif isequal(p.Results.DeflationOperator, 'ExponentialDeflation')
+                self.deflation = ExponentialDeflation(foundRoots,self.innerProductMatrix,[]);
+            end
+
         end
- 
+
         function updateFoundSolutions(self, newroot)
             if isrow(newroot)
                 warning('Discovered roots should be given as a column vector')
@@ -27,7 +39,7 @@ classdef DeflationOperator < handle
             self.foundRoots{end+1} = newroot;
             self.deflation.roots{end+1} = newroot;
         end
-        
+
         function stepadjustment = deflationStepAdjustment(self, state, update)
             if isempty(self.foundRoots)
                 stepadjustment = 1;
@@ -37,7 +49,7 @@ classdef DeflationOperator < handle
                 stepadjustment = 1/(1 - minv*dMy);
             end
         end
-        
+
         function out = getdMy(self, state, update)
             deriv = self.deflation.derivative(state);
             % defcon has a minus sign here, but that's because PETSc
@@ -45,6 +57,6 @@ classdef DeflationOperator < handle
             % than state = state + update
             out = deriv*self.innerProductMatrix*update;
         end
-        
+
     end
 end
